@@ -1,0 +1,135 @@
+upstream unicorn {
+  server unix:<%= @socket_path %> fail_timeout=0;
+}
+
+server {
+  listen 80 default deferred;
+  server_name <%= @domains.join(' ') %>;
+
+  root <%= @path %>;
+
+  access_log <%= @log_path %>.access.log combined;
+  error_log <%= @log_path %>.error.log;
+
+  client_max_body_size 100M;
+
+  location ^~ /assets/ {
+    gzip_static       on;
+    expires           max;
+    add_header        Cache-Control public;
+    add_header        Last-Modified "";
+    add_header        ETag "";
+
+    open_file_cache          max=1000 inactive=500s;
+    open_file_cache_valid    600s;
+    open_file_cache_errors   on;
+    break;
+  }
+
+  try_files $uri @unicorn;
+
+  location @unicorn {
+    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Proto $scheme;
+    proxy_set_header  Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://unicorn;
+  }
+
+  error_page 403 /403.html;
+  error_page 404 /404.html;
+  error_page 422 /422.html;
+  error_page 500 502 504 /500.html;
+  error_page 503 @503;
+
+  location ~ ^\/(403|404|422|500|503).html$ {
+    internal;
+  }
+
+  if ($request_method !~ ^(GET|HEAD|PUT|POST|DELETE|OPTIONS)$ ){
+    return 405;
+  }
+
+  if (-f /app/shared/maintenance.html) {
+    return 503;
+  }
+
+  location ~ \.(php)$ {
+    return 405;
+  }
+
+  location @503 {
+    if ($uri !~ ^/assets/) {
+      rewrite ^(.*)$ /503.html break;
+    }
+  }
+}
+
+<% @domains.each do |domain| -%>
+server {
+  ssl on;
+  ssl_certificate           /etc/nginx/ssl/<%= domain.split(' ').first %>.crt;
+  ssl_certificate_key       /etc/nginx/ssl/<%= domain.split(' ').first %>.key;
+
+  listen 443 ssl;
+  server_name <%= domain %>;
+
+  root <%= @path %>;
+
+  access_log <%= @log_path %>.access.log combined;
+  error_log <%= @log_path %>.error.log;
+
+  client_max_body_size 100M;
+
+  location ^~ /assets/ {
+    gzip_static       on;
+    expires           max;
+    add_header        Cache-Control public;
+    add_header        Last-Modified "";
+    add_header        ETag "";
+
+    open_file_cache          max=1000 inactive=500s;
+    open_file_cache_valid    600s;
+    open_file_cache_errors   on;
+    break;
+  }
+
+  try_files $uri @unicorn;
+
+  location @unicorn {
+    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Proto $scheme;
+    proxy_set_header  Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://unicorn;
+  }
+
+  error_page 403 /403.html;
+  error_page 404 /404.html;
+  error_page 422 /422.html;
+  error_page 500 502 504 /500.html;
+  error_page 503 @503;
+
+  location ~ ^\/(403|404|422|500|503).html$ {
+    internal;
+  }
+
+  if ($request_method !~ ^(GET|HEAD|PUT|POST|DELETE|OPTIONS)$ ){
+    return 405;
+  }
+
+  if (-f /app/shared/maintenance.html) {
+    return 503;
+  }
+
+  location ~ \.(php)$ {
+    return 405;
+  }
+
+  location @503 {
+    if ($uri !~ ^/assets/) {
+      rewrite ^(.*)$ /503.html break;
+    }
+  }
+}
+<% end %>

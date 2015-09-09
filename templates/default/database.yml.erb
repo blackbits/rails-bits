@@ -1,0 +1,12 @@
+<% @configs.each do |name, config| %>
+<%= name %>:
+  adapter: postgresql
+  encoding: utf8
+  host: <%= config.host %>
+  database: <%= config.name %>
+  username: <%= config.user %>
+  password: <%= config.password %>
+  pool: 30
+  allow_concurrency: true
+
+<% end %>

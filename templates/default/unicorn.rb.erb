@@ -1,0 +1,45 @@
+app_root = '<%= @path %>'
+working_directory app_root
+pid '<%= @pid_path %>'
+stderr_path '<%= @log_path %>.log'
+stdout_path '<%= @log_path %>.log'
+listen '<%= @socket_path %>'
+worker_processes 9
+timeout 60
+preload_app true
+
+GC.respond_to?(:copy_on_write_friendly=) and GC.copy_on_write_friendly = true
+Unicorn::HttpServer::START_CTX[0] = "#{app_root}/bin/unicorn"
+
+before_exec do |server|
+  ENV['BUNDLE_GEMFILE'] = "#{app_root}/Gemfile"
+end
+
+before_fork do |server, worker|
+  Signal.trap 'TERM' do
+    puts 'Unicorn master intercepting TERM and sending myself QUIT instead'
+    Process.kill 'QUIT', Process.pid
+  end
+
+  defined?(ActiveRecord::Base) and ActiveRecord::Base.connection.disconnect!
+
+  # Quit the old unicorn process
+  old_pid = "#{server.config[:pid]}.oldbin"
+  if File.exists?(old_pid) && server.pid != old_pid
+    begin
+      Process.kill("QUIT", File.read(old_pid).to_i)
+    rescue Errno::ENOENT, Errno::ESRCH
+      # someone else did our job for us
+    end
+  end
+end
+
+after_fork do |server, worker|
+  GC.disable
+
+  Signal.trap 'TERM' do
+    puts 'Unicorn worker intercepting TERM and doing nothing. Wait for master to sent QUIT'
+  end
+
+  defined?(ActiveRecord::Base) and ActiveRecord::Base.establish_connection
+end

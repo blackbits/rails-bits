@@ -1,0 +1,12 @@
+name             'rails-bits'
+maintainer       'BlackBits'
+maintainer_email 'anton@blackbits.pro'
+license          'All rights reserved'
+description      'configures nginx, provides rails_app definition'
+version          '0.1.0'
+
+depends 'nginx'
+depends 'nodejs'
+depends 'logrotate'
+depends 'app-bits'
+depends 'ruby-bits'
