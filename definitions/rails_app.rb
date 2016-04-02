@@ -3,6 +3,7 @@ define :rails_app, owner: nil, paths: nil, database: nil, domains: nil do
   username = params[:owner]
   path = Array params[:paths]
   domains = Array params[:domains]
+  config = params[:config]
 
   if path.include? :default
     path += ['shared/tmp/cache',
@@ -30,6 +31,17 @@ define :rails_app, owner: nil, paths: nil, database: nil, domains: nil do
       owner username
       group username
       variables configs: params[:database]
+    end
+  end
+
+  if params[:config]
+    template 'config/config.yml' do
+      path "#{shared_path}/config/config.yml"
+      source 'config.yml.erb'
+      cookbook 'rails-bits'
+      owner username
+      group username
+      variables config: params[:config]
     end
   end
 

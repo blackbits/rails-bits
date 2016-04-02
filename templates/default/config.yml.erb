@@ -1,0 +1,1 @@
+<%= (config = YAML.dump(JSON.parse(@config.to_json)))[config.index("\n") + 1..-1] %>
