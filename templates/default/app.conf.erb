@@ -2,6 +2,12 @@ upstream unicorn {
   server unix:<%= @socket_path %> fail_timeout=0;
 }
 
+<% @mounts.each do |app_name, url| -%>
+upstream unicorn-<%= app_name %> {
+  server unix:/app/<%= app_name %>/shared/tmp/sockets/unicorn.sock fail_timeout=0;
+}
+<% end -%>
+
 server {
   listen 80 default deferred;
   server_name <%= @domains.join(' ') %>;
@@ -12,6 +18,17 @@ server {
   error_log <%= @log_path %>.error.log;
 
   client_max_body_size 100M;
+
+  <% @mounts.each do |app_name, url| -%>
+  location <%= url %> {
+    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Proto $scheme;
+    proxy_set_header  Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://unicorn-<%= app_name %>;
+    break;
+  }
+  <% end -%>
 
   location ^~ /assets/ {
     gzip_static       on;
@@ -80,6 +97,17 @@ server {
   error_log <%= @log_path %>.error.log;
 
   client_max_body_size 100M;
+
+  <% @mounts.each do |app_name, url| -%>
+  location <%= url %> {
+    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Proto $scheme;
+    proxy_set_header  Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://unicorn-<%= app_name %>;
+    break;
+  }
+  <% end -%>
 
   location ^~ /assets/ {
     gzip_static       on;

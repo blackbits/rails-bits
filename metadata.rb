@@ -3,7 +3,7 @@ maintainer       'BlackBits'
 maintainer_email 'anton@blackbits.pro'
 license          'All rights reserved'
 description      'configures nginx, provides rails_app definition'
-version          '0.1.1'
+version          '0.1.2'
 
 depends 'nginx'
 depends 'nodejs'
