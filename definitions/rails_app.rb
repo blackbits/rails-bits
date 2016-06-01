@@ -1,4 +1,4 @@
-define :rails_app, owner: nil, paths: nil, database: nil, domains: nil do
+define :rails_app, owner: nil, paths: :default, database: nil, domains: nil do
   rails_nginx_app name do
     domains params[:domains]
   end

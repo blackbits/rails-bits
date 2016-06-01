@@ -1,49 +1,26 @@
-define :rails_unicorn_app, owner: nil, paths: nil, database: nil do
+define :rails_unicorn_app, owner: nil, paths: :default, database: nil do
   name = params[:name]
   username = params[:owner]
   path = Array params[:paths]
-  database = params[:database]
-  config = params[:config]
+  db_config = params[:database]
+  app_config = params[:config]
 
   if path.include? :default
-    path += ['shared/tmp/cache',
-             'shared/tmp/pids',
-             'shared/tmp/sockets',
-             'shared/public',
+    path += ['shared/public',
              'shared/public/assets']
   end
 
-  app name do
+  rails_basic_app name do
     owner username
     paths path
+    database db_config
+    config app_config
   end
 
   path = "/app/#{name}"
   current_path = "#{path}/current"
   shared_path = "#{path}/shared"
   logs_path = "#{shared_path}/log"
-
-  if database
-    template 'config/database.yml' do
-      path "#{shared_path}/config/database.yml"
-      source 'database.yml.erb'
-      cookbook 'rails-bits'
-      owner username
-      group username
-      variables configs: database
-    end
-  end
-
-  if config
-    template 'config/config.yml' do
-      path "#{shared_path}/config/config.yml"
-      source 'config.yml.erb'
-      cookbook 'rails-bits'
-      owner username
-      group username
-      variables config: config
-    end
-  end
 
   pid_path = "#{shared_path}/tmp/pids/unicorn.pid"
   socket_path = "#{shared_path}/tmp/sockets/unicorn.sock"
