@@ -1,9 +1,13 @@
-define :rails_unicorn_app, owner: nil, paths: :default, database: nil do
+define :rails_unicorn_app, owner: nil,
+                           paths: :default,
+                           database: nil,
+                           worker_processes: 9 do
   name = params[:name]
   username = params[:owner]
   path = Array params[:paths]
   db_config = params[:database]
   app_config = params[:config]
+  worker_processes = params[:worker_processes].to_i
 
   if path.include? :default
     path += ['shared/public',
@@ -34,7 +38,8 @@ define :rails_unicorn_app, owner: nil, paths: :default, database: nil do
     variables path: current_path,
               pid_path: pid_path,
               log_path: "#{logs_path}/unicorn",
-              socket_path: socket_path
+              socket_path: socket_path,
+              worker_processes: worker_processes
   end
 
   logrotate_app "unicorn-#{name}" do

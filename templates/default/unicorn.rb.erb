@@ -4,7 +4,7 @@ pid '<%= @pid_path %>'
 stderr_path '<%= @log_path %>.log'
 stdout_path '<%= @log_path %>.log'
 listen '<%= @socket_path %>'
-worker_processes 9
+worker_processes <%= @worker_processes %>
 timeout 60
 preload_app true
 
