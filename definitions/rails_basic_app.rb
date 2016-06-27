@@ -21,6 +21,13 @@ define :rails_basic_app, owner: nil, paths: :default, database: nil do
   shared_path = "#{path}/shared"
   logs_path = "#{shared_path}/log"
 
+  directory "#{shared_path}/config" do
+    recursive true
+    owner username
+    group username
+    mode 00700
+  end
+
   if database
     template 'config/database.yml' do
       path "#{shared_path}/config/database.yml"
