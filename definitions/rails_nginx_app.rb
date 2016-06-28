@@ -1,7 +1,11 @@
-define :rails_nginx_app, domains: nil, mounts: {}, disable_assets: false do
+define :rails_nginx_app, domains: nil,
+                         mounts: {},
+                         default: false,
+                         disable_assets: false do
   name = params[:name]
   domains = Array params[:domains]
   mounts = params[:mounts]
+  default = params[:default]
   disable_assets = params[:disable_assets]
 
   path = "/app/#{name}"
@@ -14,6 +18,7 @@ define :rails_nginx_app, domains: nil, mounts: {}, disable_assets: false do
     source 'app.conf.erb'
     cookbook 'rails-bits'
     variables name: name,
+              default: default,
               domains: domains,
               path: "#{current_path}/public",
               socket_path: socket_path,

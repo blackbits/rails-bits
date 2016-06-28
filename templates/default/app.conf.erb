@@ -9,7 +9,7 @@ upstream unicorn-<%= app_name %> {
 <% end %>
 
 server {
-  listen 80 default deferred;
+  listen 80<%= @default ? ' default deferred': '' %>;
   server_name <%= @domains.join(' ') %>;
 
   root <%= @path %>;
