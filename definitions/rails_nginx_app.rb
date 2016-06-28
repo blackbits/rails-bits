@@ -1,7 +1,8 @@
-define :rails_nginx_app, domains: nil, mounts: {} do
+define :rails_nginx_app, domains: nil, mounts: {}, disable_assets: false do
   name = params[:name]
   domains = Array params[:domains]
   mounts = params[:mounts]
+  disable_assets = params[:disable_assets]
 
   path = "/app/#{name}"
   current_path = "#{path}/current"
@@ -12,11 +13,13 @@ define :rails_nginx_app, domains: nil, mounts: {} do
   template "/etc/nginx/sites-available/#{name}" do
     source 'app.conf.erb'
     cookbook 'rails-bits'
-    variables domains: domains,
+    variables name: name,
+              domains: domains,
               path: "#{current_path}/public",
               socket_path: socket_path,
               log_path: "#{logs_path}/nginx",
-              mounts: mounts
+              mounts: mounts,
+              disable_assets: disable_assets
 
     notifies :reload, resources(service: 'nginx')
   end
