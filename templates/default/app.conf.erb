@@ -2,11 +2,13 @@ upstream unicorn-<%= @name %> {
   server unix:<%= @socket_path %> fail_timeout=0;
 }
 
-<% @mounts.each do |app_name, url| %>
+<% @mounts.each do |app_name, mount| -%>
+  <% unless mount[:external] -%>
 upstream unicorn-<%= app_name %> {
   server unix:/app/<%= app_name %>/shared/tmp/sockets/unicorn.sock fail_timeout=0;
 }
-<% end %>
+  <% end -%>
+<% end -%>
 
 server {
   listen 80<%= @default ? ' default deferred': '' %>;
@@ -19,8 +21,8 @@ server {
 
   client_max_body_size 100M;
 
-  <% @mounts.each do |app_name, url| %>
-  location <%= url.is_a?(Regexp) ? "~* #{url.inspect[1..-2]}" : url %> {
+  <% @mounts.each do |app_name, mount| %>
+  location <%= mount[:path] %> {
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header  X-Forwarded-Proto $scheme;
     proxy_set_header  Host $http_host;
@@ -100,8 +102,8 @@ server {
 
   client_max_body_size 100M;
 
-  <% @mounts.each do |app_name, url| %>
-  location <%= url.is_a?(Regexp) ? "~* #{url.inspect[1..-2]}" : url %> {
+  <% @mounts.each do |app_name, mount| %>
+  location <%= mount[:path] %> {
     proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header  X-Forwarded-Proto $scheme;
     proxy_set_header  Host $http_host;

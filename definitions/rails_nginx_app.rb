@@ -4,9 +4,20 @@ define :rails_nginx_app, domains: nil,
                          disable_assets: false do
   name = params[:name]
   domains = Array params[:domains]
-  mounts = params[:mounts]
   default = params[:default]
   disable_assets = params[:disable_assets]
+  mounts = Hash[*params[:mounts].map {|app_name, mount|
+    mount = if mount.is_a? Hash
+              mount
+            elsif mount.is_a? Regexp
+              { path: "~* #{mount.inspect[1..-2]}",
+                external: false }
+            else
+              { path: mount,
+                external: false }
+            end
+    [app_name, mount]
+  }.flatten]
 
   path = "/app/#{name}"
   current_path = "#{path}/current"
