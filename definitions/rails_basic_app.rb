@@ -1,32 +1,41 @@
-define :rails_basic_app, owner: nil, paths: :default, database: nil do
+define :rails_basic_app, owner: nil,
+                         path_prefix: nil,
+                         assets: true,
+                         paths: :default,
+                         config: nil,
+                         database: nil do
   name = params[:name]
   username = params[:owner]
-  path = Array params[:paths]
+  paths = Array params[:paths]
   database = params[:database]
   config = params[:config]
+  paths = Array params[:paths]
+  path_prefix = params[:path_prefix]
+  path_prefix = "/#{path_prefix}" if path_prefix && !path_prefix.start_with?('/')
+  shared_path = "shared#{path_prefix}"
 
-  if path.include? :default
-    path += ['shared/tmp/cache',
-             'shared/tmp/pids',
-             'shared/tmp/sockets']
+  if paths.include? :default
+    paths += ["#{shared_path}/tmp/cache",
+              "#{shared_path}/tmp/pids",
+              "#{shared_path}/tmp/sockets"]
+
+    if params[:assets]
+      paths += ["#{shared_path}/public",
+                "#{shared_path}/public/assets"]
+    end
   end
+
+  paths += ["#{shared_path}/config"]
 
   app name do
     owner username
-    paths path
+    send :path_prefix, path_prefix
+    send :paths, paths
   end
 
   path = "/app/#{name}"
-  current_path = "#{path}/current"
-  shared_path = "#{path}/shared"
+  shared_path = "#{path}/#{shared_path}"
   logs_path = "#{shared_path}/log"
-
-  directory "#{shared_path}/config" do
-    recursive true
-    owner username
-    group username
-    mode 00700
-  end
 
   if database
     template 'config/database.yml' do

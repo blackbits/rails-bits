@@ -1,29 +1,29 @@
 define :rails_unicorn_app, owner: nil,
+                           path_prefix: nil,
                            paths: :default,
+                           assets: true,
+                           config: nil,
                            database: nil,
                            worker_processes: 9 do
   name = params[:name]
   username = params[:owner]
-  path = Array params[:paths]
-  db_config = params[:database]
-  app_config = params[:config]
+  current_params = params
   worker_processes = params[:worker_processes].to_i
-
-  if path.include? :default
-    path += ['shared/public',
-             'shared/public/assets']
-  end
+  path_prefix = params[:path_prefix]
+  path_prefix = "/#{path_prefix}" if path_prefix && !path_prefix.start_with?('/')
 
   rails_basic_app name do
     owner username
-    paths path
-    database db_config
-    config app_config
+    send :path_prefix, path_prefix
+    assets current_params[:assets]
+    paths current_params[:paths]
+    database current_params[:database]
+    config current_params[:config]
   end
 
   path = "/app/#{name}"
-  current_path = "#{path}/current"
-  shared_path = "#{path}/shared"
+  current_path = "#{path}/current#{path_prefix}"
+  shared_path = "#{path}/shared#{path_prefix}"
   logs_path = "#{shared_path}/log"
 
   pid_path = "#{shared_path}/tmp/pids/unicorn.pid"
