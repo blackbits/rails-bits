@@ -55,12 +55,8 @@ define :rails_unicorn_app, owner: nil,
     lastaction "/etc/init.d/#{name} reopen-logs"
   end
 
-  template "/etc/init.d/#{name}" do
-    source 'unicorn_init.erb'
-    cookbook 'rails-bits'
-    mode 0755
-    variables path: current_path,
-              pid_path: pid_path,
-              username: username
+  unicorn_initd name do
+    path current_path
+    send :pid_path, pid_path
   end
 end

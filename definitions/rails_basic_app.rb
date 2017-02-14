@@ -11,21 +11,24 @@ define :rails_basic_app, owner: nil,
   config = params[:config]
   paths = Array params[:paths]
   path_prefix = params[:path_prefix]
-  path_prefix = "/#{path_prefix}" if path_prefix && !path_prefix.start_with?('/')
-  shared_path = "shared#{path_prefix}"
+  path_prefix = "#{path_prefix}/" if path_prefix && !path_prefix.end_with?('/')
 
   if paths.include? :default
-    paths += ["#{shared_path}/tmp/cache",
-              "#{shared_path}/tmp/pids",
-              "#{shared_path}/tmp/sockets"]
+    paths.delete :default
+
+    paths += ["#{path_prefix}config",
+              "#{path_prefix}log",
+              "#{path_prefix}tmp/cache",
+              "#{path_prefix}tmp/pids",
+              "#{path_prefix}tmp/sockets"]
 
     if params[:assets]
-      paths += ["#{shared_path}/public",
-                "#{shared_path}/public/assets"]
+      paths += ["#{path_prefix}public",
+                "#{path_prefix}public/assets"]
     end
+  else
+    paths += ["#{path_prefix}config"]
   end
-
-  paths += ["#{shared_path}/config"]
 
   app name do
     owner username
@@ -34,28 +37,31 @@ define :rails_basic_app, owner: nil,
   end
 
   path = "/app/#{name}"
-  shared_path = "#{path}/#{shared_path}"
+  shared_path = "#{path}/shared"
+  shared_path += "/#{path_prefix}" if path_prefix
   logs_path = "#{shared_path}/log"
 
   if database
-    template 'config/database.yml' do
-      path "#{shared_path}/config/database.yml"
-      source 'database.yml.erb'
-      cookbook 'rails-bits'
-      owner username
-      group username
-      variables configs: database
+    db_config = database.reduce({}) do |result, (name, config)|
+      result[name] = { adapter: 'postgresql',
+                       encoding: 'utf8',
+                       host: config.host,
+                       database: config.name,
+                       username: config.user,
+                       password: config.password,
+                       pool: 30,
+                       allow_concurrency: true }
+      result
+    end
+
+    yaml_config "#{shared_path}/config/database.yml" do
+      send :config, db_config
     end
   end
 
   if config
-    template 'config/config.yml' do
-      path "#{shared_path}/config/config.yml"
-      source 'config.yml.erb'
-      cookbook 'rails-bits'
-      owner username
-      group username
-      variables config: config
+    yaml_config "#{shared_path}/config/config.yml" do
+      send :config, config
     end
   end
 end
