@@ -16,7 +16,7 @@ server {
 
   root <%= @path %>;
 
-  access_log <%= @log_path %>.access.log combined;
+  access_log <%= @log_path %>.access.log custom;
   error_log <%= @log_path %>.error.log;
 
   client_max_body_size 100M;
@@ -97,7 +97,7 @@ server {
 
   root <%= @path %>;
 
-  access_log <%= @log_path %>.access.log combined;
+  access_log <%= @log_path %>.access.log custom;
   error_log <%= @log_path %>.error.log;
 
   client_max_body_size 100M;

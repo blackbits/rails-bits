@@ -22,6 +22,10 @@ events {
 }
 
 http {
+  log_format custom '$remote_addr - $remote_user [$time_local] '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent" "$http_host"';
+
   <% if node.recipe?('nginx::naxsi_module') %>
   include       <%= node['nginx']['dir'] %>/naxsi_core.rules;
   <% end %>
@@ -30,7 +34,7 @@ http {
   default_type  application/octet-stream;
 
   <% unless node['nginx']['disable_access_log'] -%>
-  access_log	<%= node['nginx']['log_dir'] %>/access.log;
+  access_log	<%= node['nginx']['log_dir'] %>/access.log custom;
   <% end %>
   <% if node['nginx']['server_tokens'] -%>
   server_tokens <%= node['nginx']['server_tokens'] %>;
