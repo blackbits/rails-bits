@@ -6,6 +6,7 @@ define :rails_nginx_app, domains: nil,
   domains = Array params[:domains]
   default = params[:default]
   disable_assets = params[:disable_assets]
+  username = params[:username]
   mounts = Hash[*params[:mounts].map {|app_name, mount|
     mount = if mount.is_a? Hash
               mount
